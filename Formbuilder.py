@@ -19,7 +19,7 @@ Follow these rules strictly:
 1.  **Output Format:** The output MUST be a JSON array of field objects. Each object represents one form field. Output ONLY the JSON code without any other supporting text.
 
 2.  **Field Object Structure:** Each field object MUST conform to the following structure and use the specified keys. Do NOT invent new keys.
-    *   `id`: **REQUIRED**. Generate a unique UUID string for each *newly added* field (e.g., "123e4567-e89b-12d3-a456-426614174000"). Each field in the form must have a different `id`. *When modifying an existing field, its `id` should be preserved.*
+    *   `id`: **REQUIRED**. Generate a unique UUID string for each *newly added* field the UUID should be created like the one we get using the python uuid library standard 4. Each field in the form must have a different `id`. *When modifying an existing field, its `id` should be preserved.*
     *   `type`: **REQUIRED**. The type of the field. Choose from: "singleselect", "multiselect", "radio", "checkbox", "date", "datetime", "time", "textarea", "text", "number", "phone", "email", "file", "rating", "url".
     *   `title`: **REQUIRED**. A human-readable label for the field (e.g., "Full Name", "Your Favorite Color").
     *   `hidden`: **REQUIRED**. Boolean. Usually `false`. Set to `true` if the field should be hidden by default (e.g., if its visibility is controlled ONLY by conditions).
@@ -28,8 +28,9 @@ Follow these rules strictly:
         *   For field types `singleselect`, `multiselect`, `radio`, `checkbox`: This MUST be an array containing a single object: `[{"values": ["Option1", "Option2", ...], "conditions": []}]`. Populate `values` with relevant options. The `conditions` array *within* this options object is for advanced per-option logic and should usually be `[]` for basic forms.
         *   For all other field types: This MUST be an empty array `[]`.
     *   `property`: **REQUIRED**. This MUST be an empty object `{}` for basic forms.
-    *   `required`: **REQUIRED**. Boolean (`true` or `false`). If a field is a necessary field which means that the user should fill it as a mandatory field.examples like email, phonenumber, name fields are mandatory and if you think if a field is very relevant then set true for the required. if a field is shown due to a condition met then that filed should be required.
-    *   `field_key`: **REQUIRED**. A string identifier. it should always be the lowercase version of the field name. if field name contains any space in the name then the field key should have underscore in that place.
+    * required: ** REQUIRED **. Boolean (`true` or `false`). If a field is necessary, it means that the user should fill it out as a mandatory field. Examples like email, phone number, and name fields are mandatory. If you think a field is very relevant, set it to true for required. If a field is shown due to a condition being met, then that field should be required.
+    *   `field_key`: **REQUIRED**. A string identifier.
+for general field name, age, gender it should be given as name, age etc without consider what the feild name is given, otherwise it should always be the lowercase version of the field name. if field name contains any space in the name then the field key should have underscore in that place.
     *   `team_field`: **REQUIRED**. Boolean. For basic forms, this will almost always be `false`.
     *   `description`: **REQUIRED**. A brief, helpful text for the user (e.g., "Please enter your full name.").
     *   `conditions`: **REQUIRED**. Defines the logic for when this field should be visible or active. It can be:
@@ -115,7 +116,7 @@ If form jsonn contained:
     "type": "text",
     "title": "Full Name",
     "required": true,
-    "field_key": "full_name",
+    "field_key": "name",
     "description": "Please enter your full name.",
     "hidden": false, "unique": null, "options": [], "property": {}, "conditions": [], "team_field": false
   }
@@ -126,7 +127,7 @@ If form jsonn contained:
     "type": "text",
     "title": "Your Full Name", // MODIFIED
     "required": false, // MODIFIED
-    "field_key": "your_full_name", // MODIFIED based on new title
+    "field_key": "name", 
     "description": "Please enter your full name.", // Could also be updated if user specified
     "hidden": false, "unique": null, "options": [], "property": {}, "conditions": [], "team_field": false
   }
@@ -197,6 +198,10 @@ example json looks like this for the example of kerala state and its district
     "conditions": []
   }
 ]
+* incase the user needs a field for file attachement. it should be mentioned in the property value of the json form. The allowed values in this property are file_size, extension_types, max_no_of_files. 
+for an example create me a field for uploading a pdf file with max no of files one and max file size is 5000KB. the property in json will look like:
+property: {extension_types: [".pdf"], max_size: 5000, max_no_of_files: 1}
+available extension types are .pdf, .csv, .doc, .docx, .jpg, .jpeg, .png, .gif, ,.xlsx,.ppt,.pptx,.txt,.zip, .rar, .tar.
 """
 }
 
