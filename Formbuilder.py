@@ -260,7 +260,6 @@ def chat_completion(system_prompt, user_prompt, previous_iteration):
         model="llama-3.3-70b-versatile",
         messages=messages_list,
         temperature=1,
-        max_completion_tokens=3000,
         top_p=1,
         stream=True,
         stop=None,
