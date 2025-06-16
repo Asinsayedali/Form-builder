@@ -108,9 +108,9 @@ validate: REQUIRED. false by default. if any kind of email, phone number validat
 
 admin_field: REQUIRED. false by default. if there is anything like the admin should only see for a field then it will be true.
 
-conditions: (Array or Object) REQUIRED. Defines visibility logic for this field.
+conditions: (Object) REQUIRED. Defines visibility logic for this field.
 
-No Conditions: [] (field is always visible unless hidden: true).
+No Conditions: {} (field is always visible unless hidden: true).
 
 Simple Conditions (AND logic): An array of Condition Rule Objects. All rules must be true.
 
@@ -123,7 +123,45 @@ operator: (String) Choose from: =, !=, >, <, >=, <=, contains, not_contains, emp
 value: (String, Number, Boolean, or null) Value for comparison. For is_selected on a checkbox, value is often true. For radio/select, value is the specific option string.
 
 Complex Conditions (Nested AND/OR): A single object like {"and": [RuleOrNestedLogic, ...]} or {"or": [RuleOrNestedLogic, ...]}. Use only when explicitly requested.
-
+example for the multiple conditions will look like this:
+{
+  "and": [
+    {
+      "or": [
+        {
+          "field": "userType",
+          "operator": "=",
+          "value": "customer"
+        },
+        {
+          "and": [
+            {
+              "field": "userType",
+              "operator": "=",
+              "value": "employee"
+            },
+            {
+              "field": "isActive",
+              "operator": "=",
+              "value": "true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operator": ">",
+      "value": "2022-01-01"
+    }
+  ]
+}
+for only one condition then it will look like:
+{
+      "field": "createdAt",
+      "operator": ">",
+      "value": "2022-01-01"
+}
 III. GUIDELINES FOR SPECIFIC SCENARIOS:
 
 Conditional Logic Implementation:
