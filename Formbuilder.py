@@ -52,14 +52,18 @@ hidden: (Boolean) REQUIRED. false by default. Set to true if the field should be
 unique: (null or 1) REQUIRED. Set to 1 if the field value must be unique across all submissions (typically for "email"). Otherwise, use null.
 
 options: (Array) REQUIRED.
-
 For type "singleselect", "multiselect", "radio", "checkbox":
-Must be an array containing one or more option group objects.
-Each option group object has {"values": ["Option1", "Option2", ...], "conditions": [ConditionRule1, ...]}.
-The values array lists the selectable choices.
-The conditions array within an option group object (e.g., options[0].conditions) defines when that specific set of option values should be presented. This is used for dynamically changing available options based on other field selections (e.g., state/district). For simple fields where options are always the same, this inner conditions array should be [].
-
-For all other type values: Must be an empty array [].
+Must be an array containing one or more option group objects. Each option group object has the structure: {"values": ["Option1", "Option2", ...], "conditions": <ConditionLogicForOptionGroup>}.
+The values array lists the selectable choices for this group.
+The conditions key within this option group object (e.g., options[0].conditions) defines when this specific group of option values should be presented. It MUST follow this structure:
+No Conditions: If this option group is always available (or its availability isn't conditional upon another field's value), its conditions MUST be an empty array [].
+Single Simple Condition: If the availability of this option group depends on exactly one simple condition, its conditions MUST be a single Condition Rule Object (e.g., {"field": "target_field_id", "operator": "=", "value": "some_value"}). Do NOT wrap a single Condition Rule Object in an array or an "and"/"or" wrapper.
+Multiple Simple Conditions (Implying AND) or Complex/Nested Logic (AND/OR): If the availability depends on multiple simple conditions (all of which must be true) or involves OR logic / nesting, its conditions MUST be a single Complex Condition Logic Object.
+For example, if two simple conditions must BOTH be true: {"and": [ConditionRule1, ConditionRule2]}.
+For OR logic or more intricate nested structures: {"or": [ConditionRuleA, ConditionRuleB]} or {"and": [{"or": [RuleA, RuleB]}, RuleC]}.
+The Condition Rule Object and Complex Condition Logic Object structures are the same as defined for the main field-level conditions property (see below).
+This structure for options[N].conditions is primarily used for dynamically changing available options based on other field selections (e.g., a "District" field's options changing based on a "State" field selection).
+For all other type values: options must be an empty array [].
 
 property: (Object) REQUIRED.
 
@@ -177,19 +181,18 @@ The "State" field will have its options defined normally: options: [{"values": [
 The "District" field will have multiple entries in its options array, one for each state. Each entry will list districts for a specific state and include a condition linking to the "State" field.
 Example for District field (assuming state_field_id is the ID of the "State" field):
 
-"options": [
+[
   {
     "values": ["DistrictA1", "DistrictA2"], // Districts for StateA
-    "conditions": [{"field": "state_field_id", "operator": "=", "value": "StateA"}]
+    "conditions": {"field": "state_field_id", "operator": "=", "value": "StateA"}
   },
   {
     "values": ["DistrictB1", "DistrictB2"], // Districts for StateB
-    "conditions": [{"field": "state_field_id", "operator": "=", "value": "StateB"}]
+    "conditions": {"field": "state_field_id", "operator": "=", "value": "StateB"}
   }
 ]
 
-
-The "District" field itself will have conditions: [] (it's always "active", but its options change). hidden: false. required: true.
+The "District" field itself will have conditions: {} (it's always "active", but its options change). hidden: false. required: true.
 
 Common Form Interpretations:
 
