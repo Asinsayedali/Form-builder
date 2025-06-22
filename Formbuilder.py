@@ -56,7 +56,7 @@ For type "singleselect", "multiselect", "radio", "checkbox":
 Must be an array containing one or more option group objects. Each option group object has the structure: {"values": ["Option1", "Option2", ...], "conditions": <ConditionLogicForOptionGroup>}.
 The values array lists the selectable choices for this group.
 The conditions key within this option group object (e.g., options[0].conditions) defines when this specific group of option values should be presented. It MUST follow this structure:
-No Conditions: If this option group is always available (or its availability isn't conditional upon another field's value), its conditions MUST be an empty array [].
+No Conditions: If this option group is always available (or its availability isn't conditional upon another field's value), its conditions MUST be an empty {}.
 Single Simple Condition: If the availability of this option group depends on exactly one simple condition, its conditions MUST be a single Condition Rule Object (e.g., {"field": "target_field_id", "operator": "=", "value": "some_value"}). Do NOT wrap a single Condition Rule Object in an array or an "and"/"or" wrapper.
 Multiple Simple Conditions (Implying AND) or Complex/Nested Logic (AND/OR): If the availability depends on multiple simple conditions (all of which must be true) or involves OR logic / nesting, its conditions MUST be a single Complex Condition Logic Object.
 For example, if two simple conditions must BOTH be true: {"and": [ConditionRule1, ConditionRule2]}.
