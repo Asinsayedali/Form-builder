@@ -1,15 +1,19 @@
+import json
 import os
-from groq import Groq
+import uuid
+from typing import List, Dict, Any, Union, Set
+
 from dotenv import load_dotenv
+from groq import Groq
+
 load_dotenv()
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
-
 system_prompt = {
-        "role": "system",
-        "content": """
+    "role": "system",
+    "content": """
 ---
 You are an AI assistant specialized in creating and modifying JSON configurations for web forms. Your primary task is to convert a user's natural language request into a valid JSON array, where each object in the array represents a form field.
 
@@ -212,9 +216,52 @@ Condition field reference: Must use the id of a field present in the final form 
 """
 }
 
-#user_prompt = input("enter your prompt")
+
+def update_condition_references(condition: Union[dict, list], uuid_mapping: Dict[str, str]) -> Union[dict, list]:
+    """Recursively update field references in conditions."""
+    if isinstance(condition, dict):
+        # Handle simple condition
+        if 'field' in condition:
+            condition['field'] = uuid_mapping.get(condition['field'], condition['field'])
+            return condition
+        # Handle AND/OR conditions
+        elif 'and' in condition or 'or' in condition:
+            key = 'and' if 'and' in condition else 'or'
+            condition[key] = [update_condition_references(c, uuid_mapping) for c in condition[key]]
+            return condition
+    elif isinstance(condition, list):
+        return [update_condition_references(c, uuid_mapping) for c in condition]
+    return condition
+
+
+def generate_consistent_uuids(schema: List[Dict[str, Any]], current_uuids: Set[str]) -> List[Dict[str, Any]]:
+    """Generate consistent UUIDs for form fields with recursive condition handling."""
+    uuid_mapping = {}
+
+    for field in schema:
+        old_id = field['id']
+        if old_id not in current_uuids:
+            uuid_mapping[old_id] = str(uuid.uuid4())
+            current_uuids.add(uuid_mapping[old_id])
+        else:
+            uuid_mapping[old_id] = old_id
+        field['id'] = uuid_mapping[old_id]
+
+        # Handle conditions in the field (recursive)
+        if field.get('conditions'):
+            field['conditions'] = update_condition_references(field['conditions'], uuid_mapping)
+
+        # Handle options with conditions (recursive)
+        if field.get('options') and isinstance(field['options'], list):
+            for option in field['options']:
+                if option.get('conditions'):
+                    option['conditions'] = update_condition_references(option['conditions'], uuid_mapping)
+
+    return schema
+
+
+# user_prompt = input("enter your prompt")
 def chat_completion(system_prompt, user_prompt, previous_iteration):
-    ##print(previous_iteration)
     messages_list = [system_prompt]
     if previous_iteration is None:
         messages_list.append({
@@ -223,7 +270,7 @@ def chat_completion(system_prompt, user_prompt, previous_iteration):
         })
     else:
         combined = (
-            f"Here’s my existing form: {previous_iteration}\n\n"
+            f"Here's my existing form: {previous_iteration}\n\n"
             f"{user_prompt}"
         )
         messages_list.append({
@@ -235,30 +282,26 @@ def chat_completion(system_prompt, user_prompt, previous_iteration):
         messages=messages_list,
         temperature=1,
         top_p=1,
-        stream=True,
+        stream=False,
         stop=None,
     )
 
-    full_response = ""
-    for chunk in completion:
-        piece = chunk.choices[0].delta.content or ""
-        print(piece, end="", flush=True)
-        full_response += piece
+    # The response will already be in JSON format
+    return json.loads(completion.choices[0].message.content)
 
-    return full_response
-    
 
 previous_iteration = None
-
+current_ids = set()
 while True:
     prompt_text = input("\nEnter your form request (or type 'exit'): ")
     if prompt_text.strip().lower() == "exit":
         break
 
-    updated_json = chat_completion(
+    ai_gen_data = chat_completion(
         system_prompt=system_prompt,
         user_prompt=prompt_text,
         previous_iteration=previous_iteration
     )
-    previous_iteration = updated_json
+    previous_iteration = generate_consistent_uuids(ai_gen_data, current_ids)
+    print(json.dumps(previous_iteration, indent=4))
     print("\n\nSaved the latest form. You can now enter more edits or type 'exit'.\n")
